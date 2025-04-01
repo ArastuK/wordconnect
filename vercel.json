@@ -3,7 +3,7 @@
     "builds": [
         {
             "src": "app.py",
-            "use": "@vercel/python"
+            "use": "@vercel/python@3.12"
         }
     ],
     "routes": [
@@ -13,6 +13,7 @@
         }
     ],
     "env": {
-        "PYTHONPATH": "."
+        "PYTHONPATH": ".",
+        "FLASK_ENV": "production"
     }
 } 

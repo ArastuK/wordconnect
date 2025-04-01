@@ -273,72 +273,64 @@ def get_contextual_clue(word, difficulty='easy'):
             f"Among the ancient ruins, mysterious symbols started to *{masked_word}* with forgotten power."
         ])
 
-def get_ai_word_and_clue(previous_word, difficulty_mod, clue_style, history, min_letters, max_letters, word_relation):
-    """Gets a word and its contextual clue from Gemini."""
-    history_str = ", ".join(history) if history else "None"
-    
-    # Create a more creative and varied prompt for word selection
-    prompt = f"""You are a creative word game master. Generate an interesting word that connects to '{previous_word}' in an unexpected way.
+def get_ai_word_and_clue(previous_word, prompt_modifier, clue_style, word_history, min_letters, max_letters, word_relation):
+    """Get a word and clue from the AI with improved uniqueness checks."""
+    try:
+        # Create a more specific prompt for word selection
+        prompt = f"""Generate a single word that:
+1. Is different from all these previously used words: {', '.join(word_history)}
+2. Is different from the previous word: {previous_word}
+3. Is not a variation or semantically close to any previous words
+4. Has a logical connection to the previous word: {previous_word}
+5. Is between {min_letters} and {max_letters} letters long
+6. Is a valid English word
+7. Has a clear relationship with the previous word ({word_relation})
 
-    Connected word: '{previous_word}'
-    Relationship type: {word_relation}
-    Difficulty: {difficulty_mod}
-    Already used words: [{history_str}]
+{prompt_modifier}
 
-    Guidelines for selecting the perfect word:
-    1. Choose a word that has an interesting but not obvious connection to '{previous_word}'
-    2. The word should be common enough to be guessable but interesting enough to be engaging
-    3. Consider multiple types of connections:
-       - Semantic relationships (meaning)
-       - Thematic relationships (context/scenario)
-       - Metaphorical relationships (figurative connections)
-       - Sensory relationships (how things look, sound, feel)
-       - Functional relationships (how things are used)
-       - Opposites or contrasts
-       - Cause and effect
-       - Part to whole
-       - Action to object
-       - Object to material
-    4. The word should be between 3 and 10 letters long
-    5. Avoid extremely rare or technical words
-    6. Choose words that can work well in creative, imaginative contexts
-    7. Consider words that could create interesting story possibilities
-    8. IMPORTANT: The word must be different from all previously used words
-    9. IMPORTANT: The word must be different from the previous word
-    10. IMPORTANT: The word must not be a variation of any previously used word
-    11. IMPORTANT: The word must not be semantically too close to any previously used word
-    12. The connection should be creative but logical
-    13. Consider using words from different categories/domains
-    14. Avoid using words that are too similar in meaning or context to previous words
-    15. Try to create a diverse chain of words that explores different themes and concepts
+Return ONLY the word, nothing else."""
 
-    Response format: Return ONLY the single word, nothing else."""
-    
-    # Try up to 3 times to get a valid word
-    for attempt in range(3):
-        word = ask_gemini(prompt, is_clue=False)
+        response = model.generate_content(prompt)
+        new_word = response.text.strip().lower()
         
-        # Validate the word
-        if word and word not in history and word != previous_word:
-            # Check if the word is too similar to any previous words
-            is_similar = False
-            for prev_word in history + [previous_word]:
-                # Check for similar length and shared letters
-                if len(word) == len(prev_word) and sum(a == b for a, b in zip(word, prev_word)) > len(word) * 0.7:
-                    is_similar = True
-                    break
-                # Check for similar meaning using word length and shared letters
-                if abs(len(word) - len(prev_word)) <= 2 and sum(a == b for a, b in zip(word, prev_word)) > len(word) * 0.6:
-                    is_similar = True
-                    break
+        # Enhanced validation
+        if not new_word or len(new_word) < min_letters or len(new_word) > max_letters:
+            return None, None
             
-            if not is_similar:
-                clue = get_contextual_clue(word, difficulty_mod)
-                return word, clue
-    
-    # If we get here, all attempts failed
-    print("All AI attempts failed to generate a unique word")
-    return None, None
+        # Check for direct repetition
+        if new_word in word_history or new_word == previous_word:
+            return None, None
+            
+        # Check for similarity with previous words
+        for word in word_history:
+            # Check for shared letters (if same length)
+            if len(word) == len(new_word):
+                shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
+                if shared_letters / len(word) > 0.7:  # More than 70% shared letters
+                    return None, None
+            # Check for similar length words
+            elif abs(len(word) - len(new_word)) <= 2:
+                shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
+                if shared_letters / min(len(word), len(new_word)) > 0.6:  # More than 60% shared letters
+                    return None, None
+        
+        # Get the clue after confirming word uniqueness
+        clue_prompt = f"""Given the word chain:
+Previous word: {previous_word}
+New word: {new_word}
+
+Generate a {clue_style} clue that helps the player guess the word '{new_word}'.
+The clue should be clear but not too obvious.
+Return ONLY the clue, nothing else."""
+
+        clue_response = model.generate_content(clue_prompt)
+        clue = clue_response.text.strip()
+        
+        return new_word, clue
+        
+    except Exception as e:
+        print(f"Error in get_ai_word_and_clue: {str(e)}")
+        return None, None
 
 def check_word_guess(guess, correct_word):
     """Checks if the player's guess matches the correct word."""

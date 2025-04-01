@@ -21,13 +21,6 @@ if not API_KEY:
 # Configure the API
 genai.configure(api_key=API_KEY)
 
-# Initialize the model
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=GENERATION_CONFIG,
-    safety_settings=SAFETY_SETTINGS
-)
-
 # --- Constants ---
 # Safety settings for Gemini (adjust as needed)
 SAFETY_SETTINGS = [
@@ -44,6 +37,13 @@ GENERATION_CONFIG = {
     "top_k": 1,
     "max_output_tokens": 100,  # Increased for longer sentences
 }
+
+# Initialize the model
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config=GENERATION_CONFIG,
+    safety_settings=SAFETY_SETTINGS
+)
 
 # Game settings
 TIME_LIMIT_SECONDS = 15  # Time player has to answer

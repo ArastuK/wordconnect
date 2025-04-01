@@ -14,9 +14,9 @@ A fun and engaging word chain game powered by Google's Gemini AI. Players connec
 
 ## Setup
 
-1. Clone the repository:
+1. Clone the repository (requires access):
 ```bash
-git clone https://github.com/yourusername/wordconnect.git
+git clone https://github.com/ArastuK/wordconnect.git
 cd wordconnect
 ```
 
@@ -62,7 +62,7 @@ python app.py
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+This is a private repository. Please contact the repository owner for access or collaboration opportunities.
 
 ## License
 

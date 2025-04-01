@@ -4,6 +4,7 @@ import time
 import sqlite3
 from datetime import datetime
 import uuid
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key
@@ -192,4 +193,5 @@ def check_guess():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5004) 
+    port = int(os.environ.get('PORT', 5004))
+    app.run(host='0.0.0.0', port=port) 

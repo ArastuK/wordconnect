@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <circle cx="100" cy="100" r="45" fill="#FFD700"/>
+    
+    <!-- Cheeks -->
+    <circle cx="70" cy="100" r="15" fill="#FF6B6B"/>
+    <circle cx="130" cy="100" r="15" fill="#FF6B6B"/>
+    
+    <!-- Eyes -->
+    <circle cx="85" cy="90" r="5" fill="#000"/>
+    <circle cx="115" cy="90" r="5" fill="#000"/>
+    
+    <!-- Sad mouth -->
+    <path d="M 85 115 Q 100 110 115 115" stroke="#000" stroke-width="3" fill="none"/>
+    
+    <!-- Tears -->
+    <path d="M 85 95 Q 85 105 80 105" stroke="#87CEEB" stroke-width="2" fill="none"/>
+    <path d="M 115 95 Q 115 105 120 105" stroke="#87CEEB" stroke-width="2" fill="none"/>
+</svg> 

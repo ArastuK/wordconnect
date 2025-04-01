@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Chain Challenge</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #0a0f1a, #111827, #1e1b4b, #0f172a);
+            background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite;
+            color: #e2e8f0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            letter-spacing: -0.02em;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Pulsating background effect */
+        .pulse-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        /* Fun animated shapes */
+        .fun-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatShape 20s infinite linear;
+            opacity: 0.03;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+            filter: blur(1px);
+        }
+
+        @keyframes floatShape {
+            0% {
+                transform: translate(0, 100vh) rotate(0deg);
+            }
+            100% {
+                transform: translate(100px, -100vh) rotate(360deg);
+            }
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: -0.01em;
+            border-radius: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            color: #e2e8f0;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            border-radius: 1rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .input-primary {
+            background: rgba(17, 24, 39, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            letter-spacing: 0.02em;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .input-primary:focus {
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.05);
+            transform: translateY(-2px);
+            background: rgba(17, 24, 39, 0.7);
+        }
+
+        .hidden-word {
+            color: #60a5fa;
+            font-weight: 500;
+            letter-spacing: 0.5em;
+            font-family: 'Roboto Mono', monospace;
+            background: rgba(17, 24, 39, 0.5);
+            padding: 0.5em 1em;
+            border-radius: 1em;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: wordPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes wordPulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1); }
+            50% { box-shadow: 0 4px 25px rgba(59, 130, 246, 0.2); }
+        }
+
+        .hidden-word:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.2);
+            background: rgba(17, 24, 39, 0.7);
+        }
+
+        .timer-bar {
+            height: 1rem;
+            border-radius: 1rem;
+            transition: width 1s linear, background-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.3));
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .timer-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(59, 130, 246, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        .timer-bar.warning {
+            background: linear-gradient(90deg, rgba(234, 179, 8, 0.5), rgba(234, 179, 8, 0.3));
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+        }
+
+        .timer-bar.danger {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.5), rgba(239, 68, 68, 0.3));
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(17, 24, 39, 0.8);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .sound-toggle i {
+            color: #60a5fa;
+            font-size: 24px;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            letter-spacing: -0.03em;
+        }
+
+        /* Fun animations for game elements */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+
+        /* Emoji animations */
+        .emoji {
+            display: inline-block;
+            animation: spin 3s infinite linear;
+            filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.3));
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Score pulse animation */
+        .score-pulse {
+            animation: scorePulse 1s ease-in-out;
+        }
+
+        @keyframes scorePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Slide-in animations */
+        .slide-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Fade-in animation */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Add to existing styles */
+        .loading-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background-color: #60a5fa;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .loading-text {
+            color: #60a5fa;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .loading-message {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 300;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        /* Character styles */
+        .character-container {
+            position: fixed;
+            bottom: 20px;
+            right: -200px; /* Start off-screen */
+            width: 200px;
+            height: 200px;
+            z-index: 100;
+            transition: transform 0.8s ease;
+            transform: translateX(0);
+            pointer-events: none;
+        }
+
+        .character-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Show character with slide-in animation */
+        .character-container.show {
+            transform: translateX(-220px); /* Slide in from right */
+            pointer-events: auto;
+        }
+
+        /* Hide character with slide-out animation */
+        .character-container.hide {
+            transform: translateX(0); /* Slide out to right */
+        }
+
+        /* Settings panel styles */
+        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-panel.show {
+            display: block;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+        }
+
+        .settings-overlay.show {
+            display: block;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .settings-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(17, 24, 39, 0.8);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .settings-toggle i {
+            color: #60a5fa;
+            font-size: 24px;
+        }
+
+        .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-option:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .theme-option.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .theme-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Light theme styles */
+        body.light-theme {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #bae6fd, #7dd3fc);
+            color: #1e293b;
+        }
+
+        body.light-theme .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(59, 130, 246, 0.1);
+        }
+
+        body.light-theme .btn-primary {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #1e293b;
+        }
+
+        body.light-theme .input-primary {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #1e293b;
+        }
+
+        body.light-theme .text-glow {
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .hidden-word {
+            color: #2563eb;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        body.light-theme .timer-bar {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.2));
+        }
+
+        body.light-theme .timer-bar.warning {
+            background: linear-gradient(90deg, rgba(234, 179, 8, 0.3), rgba(234, 179, 8, 0.2));
+        }
+
+        body.light-theme .timer-bar.danger {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2));
+        }
+
+        body.light-theme .settings-toggle,
+        body.light-theme .sound-toggle {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .settings-toggle i,
+        body.light-theme .sound-toggle i {
+            color: #2563eb;
+        }
+
+        body.light-theme .settings-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .theme-option {
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .theme-option:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .theme-option.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Toggle switch styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(59, 130, 246, 0.2);
+            transition: .4s;
+            border-radius: 34px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 2px;
+            background-color: #60a5fa;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.4);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+            background-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Light theme toggle styles */
+        body.light-theme .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .toggle-slider:before {
+            background-color: #93c5fd;
+        }
+
+        body.light-theme input:checked + .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme input:checked + .toggle-slider:before {
+            background-color: #3b82f6;
+        }
+
+        /* Light theme text improvements */
+        body.light-theme .text-gray-300,
+        body.light-theme .text-gray-400,
+        body.light-theme .text-gray-500 {
+            color: #475569;
+        }
+
+        body.light-theme .text-blue-300 {
+            color: #2563eb;
+        }
+
+        body.light-theme .text-blue-400 {
+            color: #1d4ed8;
+        }
+
+        body.light-theme .space-y-4 p {
+            color: #1e293b;
+        }
+
+        body.light-theme .text-xl.text-blue-300 {
+            color: #1d4ed8;
+        }
+
+        body.light-theme .text-2xl.font-light {
+            color: #1e293b;
+        }
+
+        body.light-theme .text-gray-200 {
+            color: #1e293b;
+        }
+
+        body.light-theme .text-gray-400 {
+            color: #64748b;
+        }
+
+        /* Game Over Box Styles */
+        #game-over {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+        }
+
+        #game-over-message {
+            line-height: 1.5;
+        }
+
+        #word-history {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #word-history::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #word-history::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        #word-history::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        #word-history::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #high-score-input input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: #fff;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+        }
+
+        #high-score-input input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        #game-over .btn-primary {
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+        }
+
+        #game-over .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Add these styles to your existing CSS */
+        .settings-container {
+            position: fixed;
+            top: 20px;
+            right: 90px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .settings-button, .info-button {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-button:hover, .info-button:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(17, 24, 39, 0.8);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .settings-button i, .info-button i {
+            color: #60a5fa;
+            font-size: 24px;
+        }
+
+        .tooltip-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .tooltip-content.show {
+            display: block;
+        }
+
+        /* Light theme styles for tooltip */
+        body.light-theme .tooltip-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #1e293b;
+        }
+
+        body.light-theme .difficulty-info {
+            color: #1e293b;
+        }
+
+        body.light-theme .difficulty-item {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        body.light-theme .difficulty-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .difficulty-name {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        body.light-theme .difficulty-desc {
+            color: #475569;
+        }
+
+        body.light-theme .settings-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .settings-panel h2,
+        body.light-theme .settings-panel h3 {
+            color: #2563eb;
+        }
+
+        body.light-theme .theme-option {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .theme-option:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .theme-option.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .toggle-slider:before {
+            background-color: #93c5fd;
+        }
+
+        body.light-theme input:checked + .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme input:checked + .toggle-slider:before {
+            background-color: #3b82f6;
+        }
+
+        /* Light theme styles for settings and tooltip */
+        body.light-theme .settings-button {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .settings-button:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .settings-button i {
+            color: #2563eb;
+        }
+
+        body.light-theme .tooltip-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #1e293b;
+        }
+
+        body.light-theme .difficulty-info {
+            color: #1e293b;
+        }
+
+        body.light-theme .difficulty-item {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        body.light-theme .difficulty-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .difficulty-name {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        body.light-theme .difficulty-desc {
+            color: #475569;
+        }
+
+        body.light-theme .settings-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .settings-panel h2,
+        body.light-theme .settings-panel h3 {
+            color: #2563eb;
+        }
+
+        body.light-theme .theme-option {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .theme-option:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .theme-option.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        body.light-theme .toggle-slider:before {
+            background-color: #93c5fd;
+        }
+
+        body.light-theme input:checked + .toggle-slider {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body.light-theme input:checked + .toggle-slider:before {
+            background-color: #3b82f6;
+        }
+    </style>
+    <script>
+        let timeLimit = 15;
+        let timerInterval;
+        let currentTime;
+        let currentScore = 0;
+        let currentWordHistory = [];
+        let currentDifficulty = 'easy';
+
+        // Sound management
+        let isSoundEnabled = true;
+        let hoverSound;
+        let correctSound;
+        let wrongSound;
+        let ambientMusic;
+
+        // Character management
+        let characterImage;
+        let characterContainer;
+
+        // Arrays of GIFs for different states
+        const happyGifs = [
+            '/static/images/character/happy1.gif',
+            '/static/images/character/happy2.gif',
+            '/static/images/character/happy3.gif'
+            // Add more happy GIFs as needed
+        ];
+
+        const sadGifs = [
+            '/static/images/character/sad1.gif',
+            '/static/images/character/sad2.gif',
+            '/static/images/character/sad3.gif'
+            // Add more sad GIFs as needed
+        ];
+
+        // Game over messages
+        const encouragingMessages = [
+            "Try Again?",
+            "Better luck next time!",
+            "Don't give up!",
+            "Ready for another round?",
+            "Persistence is key.",
+            "Back to the start!"
+        ];
+
+        const dramaticMessages = [
+            "The end.",
+            "Your journey concludes.",
+            "Fate has decided.",
+            "Silence falls.",
+            "Your story ends here.",
+            "Some stories don't have happy endings."
+        ];
+
+        // Keep track of used messages to avoid repetition
+        let usedEncouragingMessages = [];
+        let usedDramaticMessages = [];
+
+        function initCharacter() {
+            characterImage = document.getElementById('character-image');
+            characterContainer = document.getElementById('character-container');
+            
+            if (!characterImage || !characterContainer) {
+                console.warn('Character elements not found');
+                return false;
+            }
+            return true;
+        }
+
+        function getRandomGif(gifArray) {
+            const randomIndex = Math.floor(Math.random() * gifArray.length);
+            return gifArray[randomIndex];
+        }
+
+        function updateCharacter(state) {
+            if (!characterImage) {
+                if (!initCharacter()) return;
+            }
+            
+            characterContainer.classList.add('show'); // Show the container
+            
+            switch(state) {
+                case 'happy':
+                    characterImage.src = getRandomGif(happyGifs);
+                    // Hide after animation with slide out
+                    setTimeout(() => {
+                        characterContainer.classList.add('hide');
+                        setTimeout(() => {
+                            characterContainer.classList.remove('show', 'hide');
+                        }, 800); // Wait for slide-out animation to complete
+                    }, 3000);
+                    break;
+                case 'sad':
+                    characterImage.src = getRandomGif(sadGifs);
+                    // Hide after animation with slide out
+                    setTimeout(() => {
+                        characterContainer.classList.add('hide');
+                        setTimeout(() => {
+                            characterContainer.classList.remove('show', 'hide');
+                        }, 800); // Wait for slide-out animation to complete
+                    }, 3000);
+                    break;
+            }
+        }
+
+        // Play sound effects
+        function playSound(soundType) {
+            if (!isSoundEnabled) return;
+            
+            let sound;
+            switch(soundType) {
+                case 'hover':
+                    sound = hoverSound;
+                    break;
+                case 'correct':
+                    sound = correctSound;
+                    break;
+                case 'wrong':
+                    sound = wrongSound;
+                    break;
+                case 'timeout':
+                    sound = wrongSound;
+                    break;
+            }
+            
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(() => {
+                    console.log('Failed to play sound:', soundType);
+                });
+            }
+        }
+
+        // Initialize sound system
+        function initSound() {
+            // Initialize audio elements
+            hoverSound = document.getElementById('hoverSound');
+            correctSound = document.getElementById('correctSound');
+            wrongSound = document.getElementById('wrongSound');
+            ambientMusic = document.getElementById('ambientMusic');
+
+            // Set initial volumes
+            if (hoverSound) hoverSound.volume = 0.3;
+            if (correctSound) correctSound.volume = 0.4;
+            if (wrongSound) wrongSound.volume = 0.4;
+            if (ambientMusic) ambientMusic.volume = 0.15;
+
+            // Try to play ambient music
+            if (ambientMusic) {
+                ambientMusic.play().catch(() => {
+                    console.log('Autoplay blocked. Waiting for user interaction.');
+                });
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            const icon = document.getElementById('soundIcon');
+            
+            if (isSoundEnabled) {
+                icon.className = 'fas fa-volume-up';
+                // Try to play ambient music
+                if (ambientMusic) {
+                    ambientMusic.play().catch(() => {
+                        console.log('Failed to play music');
+                    });
+                }
+            } else {
+                icon.className = 'fas fa-volume-mute';
+                if (ambientMusic) {
+                    ambientMusic.pause();
+                }
+            }
+        }
+
+        function startGame(difficulty) {
+            playSound('hover');
+            document.getElementById('difficulty-selection').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('high-scores').style.display = 'none';
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('loading-area').style.display = 'block';
+            
+            // Store current difficulty
+            currentDifficulty = difficulty;
+            
+            // Try to start music when game starts
+            if (isSoundEnabled && ambientMusic) {
+                ambientMusic.play().catch(() => {
+                    console.log('Failed to play music');
+                });
+            }
+            
+            fetch('/start_game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ difficulty }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                timeLimit = data.time_limit;
+                updateGameState(data);
+                startTimer();
+            });
+        }
+
+        function updateGameState(data) {
+            // Update previous word with animation
+            const prevWord = document.getElementById('previous-word');
+            prevWord.classList.add('fade-out');
+            
+            // Simulate AI thinking time
+            setTimeout(() => {
+                prevWord.textContent = data.previous_word;
+                prevWord.classList.remove('fade-out');
+                prevWord.classList.add('fade-in');
+
+            // Update clue with animation
+            const clue = document.getElementById('clue');
+            clue.classList.add('fade-out');
+                
+            setTimeout(() => {
+                let clueText = data.clue;
+                if (clueText.includes('*')) {
+                    clueText = clueText.replace(/\*(.*?)\*/g, '<span class="hidden-word">$1</span>');
+                }
+                clue.innerHTML = clueText;
+                clue.classList.remove('fade-out');
+                clue.classList.add('fade-in');
+
+                    // Hide loading and show game area
+                    document.getElementById('loading-area').style.display = 'none';
+                    document.getElementById('game-area').style.display = 'block';
+                    
+                    // Focus the input field
+                    const guessInput = document.getElementById('guess-input');
+                    guessInput.focus();
+                }, 500);
+            }, 1500);
+
+            // Update score with animation
+            updateScore(data.score || 0);
+
+            // Reset timer
+            document.getElementById('timer').textContent = timeLimit;
+            document.getElementById('timer-bar').style.width = '100%';
+            document.getElementById('timer-bar').classList.remove('warning', 'danger');
+        }
+
+        function startTimer() {
+            currentTime = timeLimit;
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                currentTime--;
+                document.getElementById('timer').textContent = currentTime;
+                const percentage = (currentTime / timeLimit) * 100;
+                document.getElementById('timer-bar').style.width = `${percentage}%`;
+                
+                // Add warning and danger states
+                if (percentage <= 30) {
+                    document.getElementById('timer-bar').classList.add('danger');
+                } else if (percentage <= 50) {
+                    document.getElementById('timer-bar').classList.add('warning');
+                }
+                
+                if (currentTime <= 0) {
+                    clearInterval(timerInterval);
+                    playSound('timeout');
+                    // Only show game over if it's not already shown
+                    if (document.getElementById('game-over').style.display === 'none') {
+                        fetch('/check_guess', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ guess: '' }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            showGameOver("Time's up! Game Over!", document.getElementById('score').textContent, data.word_history || []);
+                        });
+                    }
+                }
+            }, 1000);
+        }
+
+        function submitGuess(isTimeout = false) {
+            const guess = document.getElementById('guess-input').value.trim();
+            if (!guess && !isTimeout) return;
+
+            // Pause the timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            // Disable input and show loading state
+            const input = document.getElementById('guess-input');
+            const submitButton = input.nextElementSibling;
+            input.disabled = true;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            fetch('/check_guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ guess: guess || '' }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                if (data.correct) {
+                    playSound('correct');
+                    updateCharacter('happy');
+                    document.getElementById('score').textContent = data.score;
+                    if (!data.game_over) {
+                        updateGameState(data);
+                        startTimer();
+                        input.value = '';
+                    } else {
+                        showGameOver(data.message, data.score, data.word_history);
+                    }
+                } else {
+                    playSound('wrong');
+                    updateCharacter('sad');
+                    showGameOver(data.message, data.score, data.word_history);
+                }
+            })
+            .finally(() => {
+                // Re-enable input and restore button
+                input.disabled = false;
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Submit';
+                input.focus();
+            });
+        }
+
+        function getRandomMessage() {
+            // Reset arrays if all messages have been used
+            if (usedEncouragingMessages.length === encouragingMessages.length) {
+                usedEncouragingMessages = [];
+            }
+            if (usedDramaticMessages.length === dramaticMessages.length) {
+                usedDramaticMessages = [];
+            }
+
+            // Get available messages
+            const availableEncouraging = encouragingMessages.filter(msg => !usedEncouragingMessages.includes(msg));
+            const availableDramatic = dramaticMessages.filter(msg => !usedDramaticMessages.includes(msg));
+
+            // Randomly choose between encouraging and dramatic
+            const isEncouraging = Math.random() < 0.5;
+            let message;
+            
+            if (isEncouraging) {
+                message = availableEncouraging[Math.floor(Math.random() * availableEncouraging.length)];
+                usedEncouragingMessages.push(message);
+            } else {
+                message = availableDramatic[Math.floor(Math.random() * availableDramatic.length)];
+                usedDramaticMessages.push(message);
+            }
+
+            return message;
+        }
+
+        function showGameOver(message, score, wordHistory) {
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            // Get the random message
+            const randomMessage = getRandomMessage();
+            
+            // Update the game over message with both the result and the random message
+            document.getElementById('game-over-message').innerHTML = `
+                <div class="mb-4">${message.replace('Game Over!', '')}</div>
+                <div class="text-xl text-blue-400">${randomMessage}</div>
+            `;
+            
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('high-scores').style.display = 'none';
+            currentScore = score;
+            currentWordHistory = wordHistory;
+
+            // Show sad character if score is 0
+            if (score === 0) {
+                updateCharacter('sad');
+            }
+
+            // Get the first word from the previous word display
+            const firstWord = document.getElementById('previous-word').textContent;
+            
+            // Display word history with the first word included
+            const wordHistoryDiv = document.getElementById('word-history');
+            wordHistoryDiv.innerHTML = [
+                // Add the first word if it's not already in the history
+                ...(wordHistory[0] !== firstWord ? [firstWord] : []),
+                ...wordHistory
+            ].map((word, index) => 
+                `<div class="flex items-center">
+                    <span class="text-blue-400 mr-2">${index + 1}.</span>
+                    <span>${word.toUpperCase()}</span>
+                </div>`
+            ).join('');
+
+            // Hide high score input if score is 0
+            const highScoreInput = document.getElementById('high-score-input');
+            const saveScoreBtn = document.getElementById('save-score-btn');
+            if (score === 0) {
+                highScoreInput.style.display = 'none';
+                saveScoreBtn.style.display = 'none';
+            } else {
+                highScoreInput.style.display = 'block';
+                saveScoreBtn.style.display = 'block';
+            }
+        }
+
+        function showDifficultySelection() {
+            document.getElementById('high-scores').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('difficulty-selection').classList.remove('hidden');
+            document.getElementById('difficulty-selection').style.display = 'block';
+            
+            // Clear input fields
+            document.getElementById('guess-input').value = '';
+            document.getElementById('player-name').value = '';
+            
+            // Reset game state
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        }
+
+        function showHighScores() {
+            document.getElementById('difficulty-selection').style.display = 'none';
+            document.getElementById('high-scores').style.display = 'block';
+        }
+
+        function saveScore() {
+            const playerName = document.getElementById('player-name').value.trim() || 'Anonymous';
+            
+            fetch('/save_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    player_name: playerName,
+                    score: currentScore,
+                    difficulty: currentDifficulty
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHighScores();
+                    // Refresh high scores
+                    location.reload();
+                } else {
+                    alert('Failed to save score. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to save score. Please try again.');
+            });
+        }
+
+        // Add these functions to your existing JavaScript
+        function toggleSettings() {
+            const overlay = document.getElementById('settings-overlay');
+            const panel = document.getElementById('settings-panel');
+            overlay.classList.toggle('show');
+            panel.classList.toggle('show');
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('light-theme');
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            }
+            localStorage.setItem('theme', theme);
+            
+            // Update active theme option
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                const preview = option.querySelector('.theme-preview');
+                if ((theme === 'light' && preview.style.background.includes('#f0f9ff')) ||
+                    (theme === 'dark' && preview.style.background.includes('#0a0f1a'))) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
+
+        // Initialize theme from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                setTheme('light');
+            }
+            
+            // Set active theme option
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                if (option.querySelector('.theme-preview').style.background.includes(savedTheme === 'light' ? '#f0f9ff' : '#0a0f1a')) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+
+            // Initialize character visibility from localStorage
+            const showCharacter = localStorage.getItem('showCharacter') !== 'false';
+            const characterToggle = document.getElementById('character-toggle');
+            if (characterToggle) {
+                characterToggle.checked = showCharacter;
+                characterToggle.addEventListener('change', function(e) {
+                    const showCharacter = e.target.checked;
+                    localStorage.setItem('showCharacter', showCharacter);
+                    const container = document.getElementById('character-container');
+                    container.style.display = showCharacter ? 'block' : 'none';
+                });
+            }
+            
+            if (!showCharacter) {
+                const container = document.getElementById('character-container');
+                container.style.display = 'none';
+            }
+        });
+
+        // Update the updateCharacter function to respect the setting
+        const originalUpdateCharacter = updateCharacter;
+        updateCharacter = function(state) {
+            const showCharacter = localStorage.getItem('showCharacter') !== 'false';
+            if (showCharacter) {
+                originalUpdateCharacter(state);
+            }
+        };
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize character
+            initCharacter();
+            
+            // Initialize sound system
+            initSound();
+
+            // Add hover sound to all buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    if (isSoundEnabled && button.className !== 'sound-toggle' && hoverSound) {
+                        hoverSound.currentTime = 0;
+                        hoverSound.play().catch(() => {
+                            console.log('Failed to play hover sound');
+                        });
+                    }
+                });
+            });
+
+            // Handle Enter key in input
+            const guessInput = document.getElementById('guess-input');
+            if (guessInput) {
+                guessInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitGuess();
+                    }
+                });
+            }
+
+            // Create fun animated shapes
+            createFunShapes();
+
+            // Tooltip functionality
+            const infoToggle = document.getElementById('info-toggle');
+            const difficultyTooltip = document.getElementById('difficulty-tooltip');
+            
+            if (infoToggle && difficultyTooltip) {
+                infoToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    difficultyTooltip.classList.toggle('show');
+                });
+
+                // Close tooltip when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!difficultyTooltip.contains(e.target) && !infoToggle.contains(e.target)) {
+                        difficultyTooltip.classList.remove('show');
+                    }
+                });
+            }
+
+            // Settings button functionality
+            const settingsToggle = document.getElementById('settings-toggle');
+            if (settingsToggle) {
+                settingsToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSettings();
+                });
+            }
+
+            // Close settings when clicking overlay
+            const settingsOverlay = document.getElementById('settings-overlay');
+            if (settingsOverlay) {
+                settingsOverlay.addEventListener('click', toggleSettings);
+            }
+        });
+
+        // Create fun animated shapes
+        function createFunShapes() {
+            const shapesContainer = document.getElementById('funShapes');
+            const colors = ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+            
+            for (let i = 0; i < 20; i++) {
+                const shape = document.createElement('div');
+                shape.className = 'shape';
+                shape.style.width = `${Math.random() * 100 + 50}px`;
+                shape.style.height = shape.style.width;
+                shape.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                shape.style.left = `${Math.random() * 100}%`;
+                shape.style.animationDelay = `${Math.random() * 20}s`;
+                shapesContainer.appendChild(shape);
+            }
+        }
+
+        // Add score pulse animation when score updates
+        function updateScore(score) {
+            const scoreElement = document.getElementById('score');
+            scoreElement.textContent = score;
+            scoreElement.classList.add('score-pulse');
+            setTimeout(() => scoreElement.classList.remove('score-pulse'), 1000);
+        }
+    </script>
+</head>
+<body class="min-h-screen">
+    <!-- Pulsating background -->
+    <div class="pulse-bg"></div>
+    
+    <!-- Fun animated shapes -->
+    <div class="fun-shapes" id="funShapes"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="text-center mb-12 fade-in">
+            <h1 class="text-5xl font-light mb-6 text-blue-400 tracking-tight text-glow">AI WordConnect</h1>
+            <div class="text-xl text-blue-300 mb-6 font-light">✨ How to Play ✨</div>
+            <div class="space-y-4 text-gray-300 font-light text-base">
+                <p class="slide-in" style="animation-delay: 0.1s"><span class="text-blue-400 mr-2">1.</span>Solve the AI's sentence puzzle! <span class="emoji">🤔</span></p>
+                <p class="slide-in" style="animation-delay: 0.2s"><span class="text-blue-400 mr-2">2.</span>Guess the blank word fast! <span class="emoji">⏱️</span></p>
+                <p class="slide-in" style="animation-delay: 0.3s"><span class="text-blue-400 mr-2">3.</span>Right answer? Get a clue for the next linked word! <span class="emoji">🔗</span></p>
+                <p class="slide-in" style="animation-delay: 0.4s"><span class="text-blue-400 mr-2">4.</span>Keep the word chain going as long as you can! <span class="emoji">🔥</span></p>
+            </div>
+        </div>
+
+        <!-- Difficulty Selection -->
+        <div id="difficulty-selection" class="glass-card rounded-2xl p-10 mb-8 fade-in">
+            <h2 class="text-2xl font-light text-blue-400">Select Difficulty</h2>
+            <div class="space-y-6">
+                {% for key, value in difficulties.items() %}
+                <button onclick="startGame('{{ key }}')" 
+                        class="w-full btn-primary text-gray-200 font-light py-5 px-8 rounded-xl text-lg">
+                    {{ value.name }}
+                    <div class="text-sm text-gray-400 mt-2 font-light">{{ value.time_limit }}s time limit</div>
+                </button>
+                {% endfor %}
+            </div>
+            <button onclick="showHighScores()" 
+                    class="mt-8 w-full btn-primary text-gray-200 font-light py-5 px-8 rounded-xl text-lg">
+                View High Scores
+            </button>
+        </div>
+
+        <!-- Game Area -->
+        <div id="game-area" class="hidden">
+            <div class="glass-card rounded-2xl p-10 mb-8 fade-in">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="text-xl text-gray-300 font-light">Score: <span id="score" class="text-blue-400 font-medium">0</span></div>
+                    <div class="text-xl text-gray-300 font-light">Time: <span id="timer" class="text-blue-400 font-medium">15</span>s</div>
+                </div>
+                <div class="h-3 bg-gray-700 rounded-full mb-8 overflow-hidden">
+                    <div id="timer-bar" class="h-full bg-blue-500 rounded-full timer-bar" style="width: 100%"></div>
+                </div>
+                <div class="text-xl mb-8 text-gray-300 font-light">Connected word: <span id="previous-word" class="text-blue-400 font-medium"></span></div>
+                <div class="text-2xl mb-10 text-gray-200 leading-relaxed font-light" id="clue"></div>
+                <div class="flex space-x-6">
+                    <input type="text" id="guess-input" 
+                           class="flex-1 input-primary text-gray-200 placeholder-gray-500 rounded-xl px-6 py-4 text-lg focus:outline-none"
+                           placeholder="Enter your guess...">
+                    <button onclick="submitGuess()" 
+                            class="btn-primary text-gray-200 font-light py-4 px-10 rounded-xl text-lg">
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading-area" class="hidden">
+            <div class="glass-card rounded-2xl p-10 mb-8 fade-in">
+                <div class="loading-container">
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="loading-text">AI is thinking...</div>
+                    <div class="loading-message">Crafting the perfect word puzzle for you</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card" id="high-scores" style="display: none;">
+            <h2 class="text-3xl font-light mb-8 text-blue-400">High Scores</h2>
+            <div class="space-y-4">
+                <!-- Add column headers with fixed widths -->
+                <div class="grid grid-cols-4 gap-4 text-base bg-blue-500/20 p-4 rounded-lg font-medium text-blue-300">
+                    <span class="w-32">Name</span>
+                    <span class="w-20 text-right">Score</span>
+                    <span class="w-24">Difficulty</span>
+                    <span class="w-32 text-right">Date</span>
+                </div>
+                {% for score in high_scores %}
+                <div class="grid grid-cols-4 gap-4 text-base bg-blue-500/10 p-4 rounded-lg">
+                    <span class="font-medium w-32 truncate">{{ score[0] }}</span>
+                    <span class="text-blue-400 w-20 text-right">{{ score[1] }}</span>
+                    <span class="text-gray-400 w-24">{{ difficulties[score[2]]['name'] }}</span>
+                    <span class="text-gray-500 text-sm w-32 text-right">{{ score[3] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <button onclick="showDifficultySelection()" 
+                    class="mt-8 w-full btn-primary text-gray-200 font-light py-5 px-8 rounded-xl text-lg">
+                Back to Menu
+            </button>
+        </div>
+
+        <div class="glass-card" id="game-over" style="display: none;">
+            <h2 class="text-4xl font-light mb-8 text-blue-400">Game Over!</h2>
+            <div id="game-over-message" class="mb-8 text-2xl text-gray-300"></div>
+            <div class="mb-8">
+                <h3 class="text-2xl text-blue-400 mb-4">Word Chain:</h3>
+                <div id="word-history" class="space-y-3 text-gray-300 text-lg max-h-48 overflow-y-auto"></div>
+            </div>
+            <div id="high-score-input" class="mb-8">
+                <label for="player-name" class="block text-lg font-light mb-3">Enter your name:</label>
+                <input type="text" id="player-name" class="input-primary w-full py-4 text-lg" placeholder="Your name" maxlength="20">
+            </div>
+            <div class="flex space-x-6">
+                <button onclick="saveScore()" id="save-score-btn" class="btn-primary flex-1 py-5 text-lg">Save Score</button>
+                <button onclick="showHighScores()" class="btn-primary flex-1 py-5 text-lg">View High Scores</button>
+                <button onclick="showDifficultySelection()" class="btn-primary flex-1 py-5 text-lg">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Toggle Button -->
+    <button class="sound-toggle" onclick="toggleSound()">
+        <i class="fas fa-volume-up" id="soundIcon"></i>
+    </button>
+
+    <!-- Settings toggle button with tooltip -->
+    <div class="settings-container">
+        <button id="settings-toggle" class="settings-button">
+            <i class="fas fa-cog"></i>
+        </button>
+        <button id="info-toggle" class="settings-button">
+            <i class="fas fa-info-circle"></i>
+        </button>
+        <div class="tooltip-content" id="difficulty-tooltip">
+            <div class="difficulty-info">
+                <div class="difficulty-item">
+                    <span class="difficulty-name">Easy</span>
+                    <span class="difficulty-desc">20 seconds, obvious clues, simple words</span>
+                </div>
+                <div class="difficulty-item">
+                    <span class="difficulty-name">Medium</span>
+                    <span class="difficulty-desc">15 seconds, moderate clues, varied words</span>
+                </div>
+                <div class="difficulty-item">
+                    <span class="difficulty-name">Hard</span>
+                    <span class="difficulty-desc">12 seconds, subtle hints, challenging words</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings panel -->
+    <div class="settings-overlay" id="settings-overlay"></div>
+    <div class="settings-panel" id="settings-panel">
+        <h2 class="text-2xl font-light mb-6 text-blue-400">Settings</h2>
+        
+        <div class="mb-8">
+            <h3 class="text-lg font-light mb-4">Theme</h3>
+            <div class="space-y-2">
+                <div class="theme-option" onclick="setTheme('dark')">
+                    <div class="theme-preview" style="background: linear-gradient(135deg, #0a0f1a, #111827)"></div>
+                    <span>Dark Theme</span>
+                </div>
+                <div class="theme-option" onclick="setTheme('light')">
+                    <div class="theme-preview" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe)"></div>
+                    <span>Light Theme</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-lg font-light mb-4">Character Reactions</h3>
+            <div class="flex items-center justify-between">
+                <span>Show character reactions</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="character-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button onclick="toggleSettings()" class="w-full btn-primary text-gray-200 font-light py-3 px-6 rounded-xl">
+            Close Settings
+        </button>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="hoverSound" preload="auto">
+        <source src="/static/sounds/hover.mp3" type="audio/mp3">
+    </audio>
+    <audio id="correctSound" preload="auto">
+        <source src="/static/sounds/correct.mp3" type="audio/mp3">
+    </audio>
+    <audio id="wrongSound" preload="auto">
+        <source src="/static/sounds/wrong.mp3" type="audio/mp3">
+    </audio>
+    <audio id="ambientMusic" preload="auto" loop>
+        <source src="/static/sounds/ambient.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- Character -->
+    <div class="character-container" id="character-container">
+        <img src="/static/images/character/happy1.gif" alt="Game Character" class="character-image" id="character-image">
+    </div>
+</body>
+</html> 

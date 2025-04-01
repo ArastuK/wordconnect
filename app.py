@@ -1,47 +1,49 @@
 from flask import Flask, render_template, request, jsonify, session
 from wordconnect import get_starting_word, get_ai_word_and_clue, check_word_guess, DIFFICULTY_LEVELS
 import time
-import sqlite3
 from datetime import datetime
-import uuid
 import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Use environment variable for secret key
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+
+# MongoDB connection
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+client = MongoClient(MONGODB_URI)
+db = client.wordconnect
+high_scores = db.high_scores
 
 def init_db():
     try:
-        conn = sqlite3.connect('game.db')
-        c = conn.cursor()
-        
-        # Create high scores table
-        c.execute('''CREATE TABLE IF NOT EXISTS high_scores
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      player_name TEXT NOT NULL,
-                      score INTEGER NOT NULL,
-                      difficulty TEXT NOT NULL,
-                      date TEXT NOT NULL)''')
-        
-        conn.commit()
-        conn.close()
+        # Create indexes for better query performance
+        high_scores.create_index([("score", -1)])
     except Exception as e:
         print(f"Database initialization error: {e}")
 
 def save_high_score(player_name, score, difficulty):
-    conn = sqlite3.connect('game.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO high_scores (player_name, score, difficulty, date) VALUES (?, ?, ?, ?)',
-              (player_name, score, difficulty, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-    conn.commit()
-    conn.close()
+    try:
+        high_scores.insert_one({
+            'player_name': player_name,
+            'score': score,
+            'difficulty': difficulty,
+            'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+    except Exception as e:
+        print(f"Error saving score: {e}")
 
 def get_high_scores(limit=10):
-    conn = sqlite3.connect('game.db')
-    c = conn.cursor()
-    c.execute('SELECT player_name, score, difficulty, date FROM high_scores ORDER BY score DESC LIMIT ?', (limit,))
-    scores = c.fetchall()
-    conn.close()
-    return scores
+    try:
+        return list(high_scores.find(
+            {},
+            {'_id': 0, 'player_name': 1, 'score': 1, 'difficulty': 1, 'date': 1}
+        ).sort('score', -1).limit(limit))
+    except Exception as e:
+        print(f"Error getting high scores: {e}")
+        return []
 
 @app.route('/')
 def index():

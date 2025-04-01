@@ -21,6 +21,13 @@ if not API_KEY:
 # Configure the API
 genai.configure(api_key=API_KEY)
 
+# Initialize the model
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config=GENERATION_CONFIG,
+    safety_settings=SAFETY_SETTINGS
+)
+
 # --- Constants ---
 # Safety settings for Gemini (adjust as needed)
 SAFETY_SETTINGS = [

@@ -142,31 +142,14 @@
         }
 
         .hidden-word {
+            display: inline-block;
             color: #60a5fa;
-            font-weight: 500;
-            letter-spacing: 0.5em;
             font-family: 'Roboto Mono', monospace;
-            background: rgba(17, 24, 39, 0.5);
-            padding: 0.5em 1em;
-            border-radius: 1em;
-            border: 1px solid rgba(59, 130, 246, 0.1);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            animation: wordPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes wordPulse {
-            0%, 100% { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1); }
-            50% { box-shadow: 0 4px 25px rgba(59, 130, 246, 0.2); }
-        }
-
-        .hidden-word:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.2);
-            background: rgba(17, 24, 39, 0.7);
+            font-weight: 600;
+            font-size: 1.2em;
+            letter-spacing: 0.25em;
+            padding: 0 0.25em;
+            margin: 0 0.2em;
         }
 
         .timer-bar {
@@ -863,96 +846,6 @@
         body.light-theme input:checked + .toggle-slider:before {
             background-color: #3b82f6;
         }
-
-        /* Light theme styles for settings and tooltip */
-        body.light-theme .settings-button {
-            background: rgba(255, 255, 255, 0.7);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        body.light-theme .settings-button:hover {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        body.light-theme .settings-button i {
-            color: #2563eb;
-        }
-
-        body.light-theme .tooltip-content {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: rgba(59, 130, 246, 0.2);
-            color: #1e293b;
-        }
-
-        body.light-theme .difficulty-info {
-            color: #1e293b;
-        }
-
-        body.light-theme .difficulty-item {
-            background: rgba(59, 130, 246, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.1);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        body.light-theme .difficulty-item:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        body.light-theme .difficulty-name {
-            color: #2563eb;
-            font-weight: 500;
-        }
-
-        body.light-theme .difficulty-desc {
-            color: #475569;
-        }
-
-        body.light-theme .settings-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        body.light-theme .settings-panel h2,
-        body.light-theme .settings-panel h3 {
-            color: #2563eb;
-        }
-
-        body.light-theme .theme-option {
-            background: rgba(255, 255, 255, 0.5);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        body.light-theme .theme-option:hover {
-            background: rgba(59, 130, 246, 0.05);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        body.light-theme .theme-option.active {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        body.light-theme .toggle-slider {
-            background-color: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-
-        body.light-theme .toggle-slider:before {
-            background-color: #93c5fd;
-        }
-
-        body.light-theme input:checked + .toggle-slider {
-            background-color: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        body.light-theme input:checked + .toggle-slider:before {
-            background-color: #3b82f6;
-        }
     </style>
     <script>
         let timeLimit = 15;
@@ -1010,6 +903,14 @@
         // Keep track of used messages to avoid repetition
         let usedEncouragingMessages = [];
         let usedDramaticMessages = [];
+
+        // Add these variables at the top of your script
+        let currentGameState = {
+            isActive: false,
+            difficulty: null,
+            score: 0,
+            timeLimit: 0
+        };
 
         function initCharacter() {
             characterImage = document.getElementById('character-image');
@@ -1130,11 +1031,29 @@
 
         function startGame(difficulty) {
             playSound('hover');
-            document.getElementById('difficulty-selection').style.display = 'none';
-            document.getElementById('game-over').style.display = 'none';
-            document.getElementById('high-scores').style.display = 'none';
-            document.getElementById('game-area').style.display = 'none';
-            document.getElementById('loading-area').style.display = 'block';
+            
+            // Reset game state
+            currentScore = 0;
+            currentWordHistory = [];
+            
+            // Get all necessary elements
+            const loadingArea = document.getElementById('loading-area');
+            const gameArea = document.getElementById('game-area');
+            const difficultySelection = document.getElementById('difficulty-selection');
+            const gameOver = document.getElementById('game-over');
+            const highScores = document.getElementById('high-scores');
+            const score = document.getElementById('score');
+            
+            // Reset score display if it exists
+            if (score) score.textContent = '0';
+            
+            // Hide all screens first
+            [gameArea, difficultySelection, gameOver, highScores].forEach(element => {
+                if (element) element.style.display = 'none';
+            });
+            
+            // Show loading screen
+            if (loadingArea) loadingArea.style.display = 'block';
             
             // Store current difficulty
             currentDifficulty = difficulty;
@@ -1156,149 +1075,218 @@
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    alert(data.error);
+                    showError(data.error);
                     return;
                 }
-                timeLimit = data.time_limit;
                 updateGameState(data);
-                startTimer();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Failed to start game. Please try again.');
             });
         }
 
-        function updateGameState(data) {
-            // Update previous word with animation
-            const prevWord = document.getElementById('previous-word');
-            prevWord.classList.add('fade-out');
+        function clearGameState() {
+            // Clear timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
             
-            // Simulate AI thinking time
-            setTimeout(() => {
-                prevWord.textContent = data.previous_word;
-                prevWord.classList.remove('fade-out');
-                prevWord.classList.add('fade-in');
-
-            // Update clue with animation
-            const clue = document.getElementById('clue');
-            clue.classList.add('fade-out');
-                
-            setTimeout(() => {
-                let clueText = data.clue;
-                if (clueText.includes('*')) {
-                    clueText = clueText.replace(/\*(.*?)\*/g, '<span class="hidden-word">$1</span>');
-                }
-                clue.innerHTML = clueText;
-                clue.classList.remove('fade-out');
-                clue.classList.add('fade-in');
-
-                    // Hide loading and show game area
-                    document.getElementById('loading-area').style.display = 'none';
-                    document.getElementById('game-area').style.display = 'block';
-                    
-                    // Focus the input field
-                    const guessInput = document.getElementById('guess-input');
-                    guessInput.focus();
-                }, 500);
-            }, 1500);
-
-            // Update score with animation
-            updateScore(data.score || 0);
-
-            // Reset timer
-            document.getElementById('timer').textContent = timeLimit;
-            document.getElementById('timer-bar').style.width = '100%';
-            document.getElementById('timer-bar').classList.remove('warning', 'danger');
+            // Reset UI elements
+            const timerBar = document.querySelector('.timer-bar');
+            if (timerBar) {
+                timerBar.style.width = '100%';
+                timerBar.classList.remove('warning', 'danger');
+            }
+            
+            // Clear input
+            const input = document.getElementById('guess-input');
+            if (input) {
+                input.value = '';
+                input.disabled = false;
+            }
+            
+            // Reset game state
+            currentGameState = {
+                isActive: false,
+                difficulty: null,
+                score: 0,
+                timeLimit: 0
+            };
         }
 
         function startTimer() {
-            currentTime = timeLimit;
-            if (timerInterval) clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                currentTime--;
-                document.getElementById('timer').textContent = currentTime;
-                const percentage = (currentTime / timeLimit) * 100;
-                document.getElementById('timer-bar').style.width = `${percentage}%`;
-                
-                // Add warning and danger states
-                if (percentage <= 30) {
-                    document.getElementById('timer-bar').classList.add('danger');
-                } else if (percentage <= 50) {
-                    document.getElementById('timer-bar').classList.add('warning');
-                }
-                
-                if (currentTime <= 0) {
-                    clearInterval(timerInterval);
-                    playSound('timeout');
-                    // Only show game over if it's not already shown
-                    if (document.getElementById('game-over').style.display === 'none') {
-                        fetch('/check_guess', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ guess: '' }),
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            showGameOver("Time's up! Game Over!", document.getElementById('score').textContent, data.word_history || []);
-                        });
-                    }
-                }
-            }, 1000);
-        }
-
-        function submitGuess(isTimeout = false) {
-            const guess = document.getElementById('guess-input').value.trim();
-            if (!guess && !isTimeout) return;
-
-            // Pause the timer
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
+            
+            const startTime = Date.now();
+            const timerBar = document.querySelector('.timer-bar');
+            const timerText = document.getElementById('timer');
+            
+            if (!timerBar || !timerText) return;
+            
+            // Reset timer UI
+            timerBar.style.width = '100%';
+            timerBar.classList.remove('warning', 'danger');
+            
+            timerInterval = setInterval(() => {
+                const elapsedTime = (Date.now() - startTime) / 1000;
+                const remainingTime = Math.max(0, timeLimit - elapsedTime);
+                const percentage = (remainingTime / timeLimit) * 100;
+                
+                // Update timer bar
+                timerBar.style.width = `${percentage}%`;
+                
+                // Update timer text
+                timerText.textContent = `${Math.ceil(remainingTime)}s`;
+                
+                // Update timer bar color
+                if (percentage <= 25) {
+                    timerBar.classList.remove('warning');
+                    timerBar.classList.add('danger');
+                } else if (percentage <= 50) {
+                    timerBar.classList.remove('danger');
+                    timerBar.classList.add('warning');
+                }
+                
+                // Check if time is up
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    submitGuess(true);  // Submit with timeout flag
+                }
+            }, 100);  // Update every 100ms for smoother animation
+        }
+
+        function updateGameState(data) {
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            // Clear previous game state
+            clearGameState();
+            
+            // Hide loading area and show game area
+            document.getElementById('loading-area').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+            document.getElementById('difficulty-selection').style.display = 'none';
+
+            // Update the clue with properly masked word
+            document.getElementById('clue').innerHTML = data.clue;
+            document.getElementById('previous-word').textContent = data.previous_word || '';
+            document.getElementById('score').textContent = data.score;
+            
+            // Reset and focus the guess input
+            const guessInput = document.getElementById('guess-input');
+            if (guessInput) {
+                guessInput.value = '';
+                guessInput.disabled = false;
+                
+                // Only focus if game area is visible
+                if (document.getElementById('game-area').style.display === 'block') {
+                    setTimeout(() => {
+                        guessInput.focus();
+                        guessInput.select();
+                    }, 100);
+                }
+            }
+
+            // Update game state
+            currentGameState.isActive = true;
+            currentGameState.score = data.score;
+            currentGameState.timeLimit = data.time_limit;
+            
+            // Start new timer if we have a time limit
+            if (data.time_limit) {
+                timeLimit = data.time_limit;
+                startTimer();
+            }
+        }
+
+        function submitGuess(isTimeout = false) {
+            const input = document.getElementById('guess-input');
+            const submitButton = document.getElementById('submit-button');
+            
+            // Don't submit if game is not active
+            if (!currentGameState.isActive) {
+                showError('No active game. Please start a new game.');
+                return;
+            }
+            
+            // Don't submit if input doesn't exist or is disabled
+            if (!input || input.disabled) {
+                return;
+            }
+
+            const guess = input.value.trim();
+            
+            // Don't submit empty guesses unless it's a timeout
+            if (!guess && !isTimeout) {
+                showError('Please enter a guess.');
+                return;
+            }
 
             // Disable input and show loading state
-            const input = document.getElementById('guess-input');
-            const submitButton = input.nextElementSibling;
             input.disabled = true;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
 
             fetch('/check_guess', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ guess: guess || '' }),
+                body: JSON.stringify({
+                    guess: guess,
+                    is_timeout: isTimeout
+                })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
-                    alert(data.error);
-                    return;
+                    throw new Error(data.error);
                 }
 
                 if (data.correct) {
                     playSound('correct');
                     updateCharacter('happy');
-                    document.getElementById('score').textContent = data.score;
-                    if (!data.game_over) {
-                        updateGameState(data);
-                        startTimer();
-                        input.value = '';
-                    } else {
-                        showGameOver(data.message, data.score, data.word_history);
-                    }
+                    updateGameState(data);
                 } else {
                     playSound('wrong');
                     updateCharacter('sad');
                     showGameOver(data.message, data.score, data.word_history);
                 }
             })
-            .finally(() => {
-                // Re-enable input and restore button
-                input.disabled = false;
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Submit';
-                input.focus();
+            .catch(error => {
+                console.error('Error:', error);
+                showError(error.message || 'Failed to submit guess. Please try again.');
+                // Re-enable input and restore button on error
+                if (input) {
+                    input.disabled = false;
+                    input.focus();
+                }
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Submit';
+                }
+                // Restart timer if it was a non-timeout error
+                if (!isTimeout && currentGameState.isActive) {
+                    startTimer();
+                }
             });
         }
 
@@ -1355,20 +1343,22 @@
             if (score === 0) {
                 updateCharacter('sad');
             }
-
-            // Get the first word from the previous word display
-            const firstWord = document.getElementById('previous-word').textContent;
             
-            // Display word history with the first word included
+            // Get the last word (the one user missed) from the game over message
+            const lastWordMatch = message.match(/word was: ([A-Z]+)/);
+            const lastWord = lastWordMatch ? lastWordMatch[1] : null;
+            
+            // Display word chain with arrows, including the last word
             const wordHistoryDiv = document.getElementById('word-history');
-            wordHistoryDiv.innerHTML = [
-                // Add the first word if it's not already in the history
-                ...(wordHistory[0] !== firstWord ? [firstWord] : []),
-                ...wordHistory
-            ].map((word, index) => 
+            const allWords = [...wordHistory];
+            if (lastWord && (allWords.length === 0 || allWords[allWords.length - 1] !== lastWord)) {
+                allWords.push(lastWord);
+            }
+            
+            wordHistoryDiv.innerHTML = allWords.map((word, index) => 
                 `<div class="flex items-center">
-                    <span class="text-blue-400 mr-2">${index + 1}.</span>
-                    <span>${word.toUpperCase()}</span>
+                    <span class="text-xl ${index === allWords.length - 1 && lastWord === word ? 'text-red-400' : ''}">${word.toUpperCase()}</span>
+                    ${index < allWords.length - 1 ? '<span class="mx-3 text-blue-400">→</span>' : ''}
                 </div>`
             ).join('');
 
@@ -1600,6 +1590,28 @@
             scoreElement.classList.add('score-pulse');
             setTimeout(() => scoreElement.classList.remove('score-pulse'), 1000);
         }
+
+        // Add error handling function
+        function showError(message, duration = 3000) {
+            const errorContainer = document.getElementById('error-container');
+            if (!errorContainer) return;
+            
+            // Create error message element
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message bg-red-500 text-white px-4 py-2 rounded mb-2';
+            errorMessage.textContent = message;
+            
+            // Add to container
+            errorContainer.appendChild(errorMessage);
+            
+            // Remove after duration
+            setTimeout(() => {
+                errorMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    errorContainer.removeChild(errorMessage);
+                }, 300);
+            }, duration);
+        }
     </script>
 </head>
 <body class="min-h-screen">
@@ -1623,7 +1635,7 @@
 
         <!-- Difficulty Selection -->
         <div id="difficulty-selection" class="glass-card rounded-2xl p-10 mb-8 fade-in">
-            <h2 class="text-2xl font-light text-blue-400 text-center mb-6">Select Difficulty</h2>
+            <h2 class="text-2xl font-light text-blue-400">Select Difficulty</h2>
             <div class="space-y-6">
                 {% for key, value in difficulties.items() %}
                 <button onclick="startGame('{{ key }}')" 

@@ -48,33 +48,73 @@ model = genai.GenerativeModel(
 # Game settings
 TIME_LIMIT_SECONDS = 15  # Time player has to answer
 
+# Word list for fallback and validation
+word_list = [
+    # Nature
+    "sun", "moon", "star", "wind", "rain", "tree", "leaf", "wave", "sand", "snow",
+    "cloud", "storm", "river", "ocean", "mountain", "forest", "flower", "grass", "desert", "island",
+    # Elements
+    "fire", "water", "earth", "air", "light", "dark", "gold", "iron", "ice", "mist",
+    "steam", "smoke", "dust", "metal", "crystal", "stone", "wood", "flame", "spark", "frost",
+    # Emotions
+    "love", "hope", "joy", "dream", "smile", "laugh", "peace", "calm", "wish", "trust",
+    "fear", "rage", "pride", "shame", "grief", "zeal", "care", "hate", "pity", "pride",
+    # Actions
+    "jump", "spin", "dance", "sing", "flow", "grow", "rise", "fall", "soar", "dive",
+    "swim", "run", "walk", "fly", "leap", "roll", "sway", "bend", "twist", "turn",
+    # Qualities
+    "soft", "warm", "cool", "swift", "bold", "wise", "pure", "wild", "free", "true",
+    "bright", "dark", "sharp", "smooth", "rough", "light", "heavy", "fast", "slow", "deep",
+    # Time
+    "dawn", "dusk", "noon", "night", "time", "hour", "year", "day", "age", "now",
+    "week", "month", "season", "moment", "past", "future", "today", "tomorrow", "yesterday", "eternity",
+    # Space
+    "star", "moon", "void", "path", "road", "gate", "door", "room", "zone", "spot",
+    "space", "world", "earth", "sky", "land", "sea", "shore", "coast", "field", "garden",
+    # Colors
+    "blue", "gold", "pink", "jade", "ruby", "rose", "teal", "sage", "rust", "coal",
+    "crimson", "azure", "amber", "ivory", "ebony", "scarlet", "emerald", "sapphire", "coral", "pearl",
+    # Sounds
+    "song", "beat", "tune", "hum", "buzz", "ring", "echo", "tone", "note", "drum",
+    "chime", "whisper", "shout", "roar", "sigh", "laugh", "cry", "call", "sound", "voice",
+    # Objects
+    "book", "pen", "lamp", "door", "wall", "roof", "floor", "chair", "table", "desk",
+    "clock", "phone", "glass", "paper", "cloth", "rope", "tool", "key", "lock", "box",
+    # Animals
+    "bird", "fish", "lion", "bear", "wolf", "deer", "frog", "snake", "duck", "goat",
+    "cat", "dog", "horse", "sheep", "cow", "pig", "rabbit", "fox", "owl", "hawk",
+    # Food
+    "bread", "fruit", "meat", "fish", "rice", "corn", "bean", "nut", "egg", "milk",
+    "cake", "soup", "pie", "tea", "wine", "beer", "juice", "salt", "sugar", "honey"
+]
+
 DIFFICULTY_LEVELS = {
     "1": {
         "name": "Easy",
-        "prompt_modifier": "Use a very common, simple word that can be used in everyday sentences.",
+        "prompt_modifier": "Use a common, simple word that can be used in everyday sentences.",
         "time_limit": 20,
         "clue_style": "very descriptive and obvious",
         "min_letters": 3,
-        "max_letters": 4,
-        "word_relation": "directly related"
+        "max_letters": 5,
+        "word_relation": "directly or indirectly related"
     },
     "2": {
         "name": "Medium",
         "prompt_modifier": "Use a moderately common word that requires some thinking.",
         "time_limit": 15,
         "clue_style": "moderately descriptive with some hints",
-        "min_letters": 2,
-        "max_letters": 3,
-        "word_relation": "somewhat related"
+        "min_letters": 3,
+        "max_letters": 5,
+        "word_relation": "directly or indirectly related"
     },
     "3": {
         "name": "Hard",
         "prompt_modifier": "Use a less common but still understandable word.",
-        "time_limit": 12,  # Increased from 10 to 12 seconds
+        "time_limit": 12,
         "clue_style": "minimal with subtle hints",
-        "min_letters": 2,  # Increased from 1 to 2 letters
-        "max_letters": 3,  # Increased from 2 to 3 letters
-        "word_relation": "somewhat related"  # Changed from "indirectly related" to "somewhat related"
+        "min_letters": 3,
+        "max_letters": 5,
+        "word_relation": "directly or indirectly related"
     }
 }
 
@@ -156,135 +196,80 @@ def ask_gemini(prompt_text, is_clue=False):
         print(f"\n[AI Error] An error occurred while contacting Gemini: {e}")
         return None
 
-def get_contextual_clue(word, difficulty='easy'):
-    """Generate a contextual clue for the word."""
+def get_letter_hints(word, num_hints):
+    """Generates letter hints for the word based on the number of hints requested."""
+    import random
     word_length = len(word)
     
-    # Create more varied masking patterns
-    if word_length <= 3:
-        # For very short words, show first letter
-        masked_word = word[0] + '_' * (word_length - 1)
-    elif word_length <= 4:
-        # For 4-letter words, show first and last letter
-        masked_word = word[0] + '_' * (word_length - 2) + word[-1]
-    elif word_length <= 5:
-        # For 5-letter words, show first, middle, and last letter
-        middle_pos = word_length // 2
-        masked_word = word[0] + '_' * (middle_pos - 1) + word[middle_pos] + '_' * (word_length - middle_pos - 2) + word[-1]
-    else:
-        # For longer words, show first letter, one random middle letter, and last letter
-        # Ensure the middle letter is not too close to the start or end
-        middle_pos = random.randint(2, word_length - 3)
-        masked_word = word[0] + '_' * (middle_pos - 1) + word[middle_pos] + '_' * (word_length - middle_pos - 2) + word[-1]
+    # Ensure we don't try to show more hints than there are letters
+    num_hints = min(num_hints, word_length)
     
-    # Create a more creative and varied prompt for the AI
-    prompt = f"""You are a creative puzzle maker. Create an engaging and imaginative clue for the word '{word}' in a word-guessing game.
-    The word is {word_length} letters long and will be shown as: {masked_word}
+    # Create a list of positions to show
+    positions = random.sample(range(word_length), num_hints)
     
-    Guidelines for creating the perfect clue:
-    1. Use vivid imagery and descriptive language
-    2. Create an unexpected or surprising context
-    3. Incorporate metaphors or analogies
-    4. Make it playful and engaging
-    5. Avoid obvious or direct hints
-    6. Use varied sentence structures
-    7. Make it appropriate for {difficulty} difficulty
-    8. Keep it concise but memorable
-    9. Use creative scenarios or settings
-    10. Make it feel like a mini-story
-    11. IMPORTANT: The word must be used in its correct grammatical form (noun, verb, adjective, etc.)
-    12. The sentence must be grammatically correct and make logical sense
-    13. The word should fit naturally in the sentence's context
-    14. Vary the setting and context each time (e.g., fantasy, sci-fi, historical, modern, nature, urban, etc.)
-    15. Use different narrative perspectives (first person, third person, omniscient)
-    16. Include sensory details (sights, sounds, smells, textures)
-    17. Create emotional resonance
-    18. Use different literary devices (similes, personification, alliteration)
-    19. Vary the tone (mysterious, humorous, dramatic, poetic)
-    20. Make each clue unique and memorable
+    # Create the hint string with underscores for hidden letters
+    hint = list('_' * word_length)
+    for pos in positions:
+        hint[pos] = word[pos]
     
-    Examples of creative clues:
-    - For "wise": "The ancient sage's *w_s_e* counsel guided the village through difficult times."
-    - For "owl": "In the moonlit forest, a silent *o_l* perched on the gnarled branch."
-    - For "flow": "The crystal stream began to *f_o_w* through the ancient stones."
-    - For "star": "In the digital realm, data points began to *s_a_r* like constellations."
-    - For "time": "The quantum physicist watched as particles began to *t_m_e* in impossible ways."
-    
-    Format your clue as a complete sentence with the masked word in asterisks: *{masked_word}*
-    Make sure your clue is DIFFERENT from these examples and creates a unique, imaginative scenario.
-    
-    Response should be ONLY the clue sentence, nothing else."""
-    
+    return ''.join(hint)
+
+def get_contextual_clue(word, model, difficulty_settings=None):
+    # Create a prompt that asks for a contextual clue
+    prompt = f"""Generate a single sentence that uses the word '{word}' in context, but replace the word with <BLANK>. 
+    The sentence should be natural and help the player guess the word.
+    The sentence should be clear and concise.
+    Do not use the word or any variations of it elsewhere in the sentence.
+    Format your response as a single sentence with <BLANK> where the word should be."""
+
     try:
-        # Try up to 3 times to get a valid clue from the AI
-        for attempt in range(3):
-            clue = ask_gemini(prompt, is_clue=True)
-            if clue and "*" in clue:
-                # Validate that the masked word in the clue matches our pattern
-                import re
-                masked_pattern = re.search(r'\*(.*?)\*', clue)
-                if masked_pattern and masked_pattern.group(1) == masked_word:
-                    return clue
-                else:
-                    print(f"Attempt {attempt + 1}: AI returned incorrect masking pattern")
-                    continue
-            else:
-                print(f"Attempt {attempt + 1}: AI response missing asterisks")
+        response = model.generate_content(prompt)
+        clue = response.text.strip()
         
-        # If we get here, all attempts failed
-        print("All AI attempts failed, using fallback template")
+        # Get letter hints based on difficulty
+        hint = '_' * len(word)  # Default to all hidden
+        if difficulty_settings:
+            if difficulty_settings['name'] == 'Easy':
+                hint = get_letter_hints(word, 2)  # Show 2 letters for Easy
+            elif difficulty_settings['name'] == 'Medium':
+                hint = get_letter_hints(word, 1)  # Show 1 letter for Medium
         
-        # Enhanced fallback templates with more variety and creativity
-        fallback_templates = [
-            # Fantasy themes
-            f"In the enchanted forest, magical creatures began to *{masked_word}* with ethereal grace.",
-            f"Within the wizard's spellbook, ancient words started to *{masked_word}* with forgotten power.",
-            f"At the fairy's tea party, sugar cubes began to *{masked_word}* into impossible shapes.",
+        # Create properly spaced hint
+        masked_word = ' '.join(hint)
+        clue = clue.replace('<BLANK>', f'<span class="hidden-word">{masked_word}</span>')
+        
+        # Ensure the clue ends with proper punctuation
+        if not clue[-1] in '.!?':
+            clue += '.'
             
-            # Sci-fi themes
-            f"In the quantum laboratory, experimental particles began to *{masked_word}* in unexpected patterns.",
-            f"Among the holographic displays, digital data started to *{masked_word}* through the network.",
-            f"Inside the robot's neural core, electrical impulses began to *{masked_word}* with synthetic rhythm.",
-            
-            # Nature themes
-            f"Deep beneath the ocean's surface, bioluminescent creatures would *{masked_word}* with ethereal grace.",
-            f"In the ancient forest, sunlight began to *{masked_word}* through the canopy.",
-            f"Across the desert sands, mirages started to *{masked_word}* in the heat haze.",
-            
-            # Urban themes
-            f"In the bustling city streets, neon signs began to *{masked_word}* with electric energy.",
-            f"Through the subway tunnels, echoes started to *{masked_word}* off the walls.",
-            f"Among the skyscrapers, wind currents began to *{masked_word}* between buildings.",
-            
-            # Historical themes
-            f"In the medieval castle, ancient tapestries began to *{masked_word}* with forgotten stories.",
-            f"Among the Egyptian hieroglyphs, symbols started to *{masked_word}* with ancient wisdom.",
-            f"Within the Roman forum, marble statues began to *{masked_word}* with timeless grace.",
-            
-            # Artistic themes
-            f"On the painter's canvas, colors began to *{masked_word}* into impossible patterns.",
-            f"In the musician's studio, notes started to *{masked_word}* through the air.",
-            f"Among the sculptor's tools, marble began to *{masked_word}* into new forms.",
-            
-            # Everyday themes with a twist
-            f"In the chef's experimental kitchen, flavors began to *{masked_word}* into extraordinary combinations.",
-            f"Through the photographer's lens, moments started to *{masked_word}* into memories.",
-            f"Within the gardener's greenhouse, plants began to *{masked_word}* in unexpected ways."
-        ]
-        return random.choice(fallback_templates)
+        return clue
+        
     except Exception as e:
-        print(f"Error generating clue: {str(e)}")
-        return random.choice([
-            f"In the quantum laboratory, the experimental particles began to *{masked_word}* in unexpected patterns.",
-            f"Deep beneath the ocean's surface, bioluminescent creatures would *{masked_word}* with ethereal grace.",
-            f"Among the ancient ruins, mysterious symbols started to *{masked_word}* with forgotten power."
-        ])
+        print(f"Error generating clue: {e}")
+        # Create a more descriptive fallback clue with proper hints
+        hint = '_' * len(word)
+        if difficulty_settings:
+            if difficulty_settings['name'] == 'Easy':
+                hint = get_letter_hints(word, 2)
+            elif difficulty_settings['name'] == 'Medium':
+                hint = get_letter_hints(word, 1)
+        return f'Think of a {len(word)}-letter word that means <span class="hidden-word">{" ".join(hint)}</span>.'
 
 def get_ai_word_and_clue(previous_word, prompt_modifier, clue_style, word_history, min_letters, max_letters, word_relation):
     """Get a word and clue from the AI with improved uniqueness checks."""
-    try:
-        # Create a more specific prompt for word selection
-        prompt = f"""Generate a single word that:
+    max_attempts = 5  # Increased from 3 to 5 attempts
+    
+    # Get difficulty settings from the prompt modifier
+    difficulty_settings = None
+    for level in DIFFICULTY_LEVELS.values():
+        if level['prompt_modifier'] == prompt_modifier:
+            difficulty_settings = level
+            break
+    
+    for attempt in range(max_attempts):
+        try:
+            # Create a more specific prompt for word selection
+            prompt = f"""Generate a single word that:
 1. Is different from all these previously used words: {', '.join(word_history)}
 2. Is different from the previous word: {previous_word}
 3. Is not a variation or semantically close to any previous words
@@ -297,68 +282,60 @@ def get_ai_word_and_clue(previous_word, prompt_modifier, clue_style, word_histor
 
 Return ONLY the word, nothing else."""
 
-        response = model.generate_content(prompt)
-        new_word = response.text.strip().lower()
-        
-        # Enhanced validation
-        if not new_word or len(new_word) < min_letters or len(new_word) > max_letters:
-            return None, None
+            response = model.generate_content(prompt)
+            new_word = response.text.strip().lower()
             
-        # Check for direct repetition
-        if new_word in word_history or new_word == previous_word:
-            return None, None
+            # Basic validation
+            if not new_word or not new_word.isalpha():
+                print(f"Attempt {attempt + 1}: Invalid word format")
+                continue
+                
+            if len(new_word) < min_letters or len(new_word) > max_letters:
+                print(f"Attempt {attempt + 1}: Word length outside range")
+                continue
+                
+            # Check for direct repetition
+            if new_word in word_history or new_word == previous_word:
+                print(f"Attempt {attempt + 1}: Word already used")
+                continue
+                
+            # Check for similarity with previous words (more lenient)
+            too_similar = False
+            for word in word_history:
+                # Check for shared letters (if same length)
+                if len(word) == len(new_word):
+                    shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
+                    if shared_letters / len(word) > 0.8:  # Increased from 0.7 to 0.8
+                        too_similar = True
+                        break
+                # Check for similar length words
+                elif abs(len(word) - len(new_word)) <= 2:
+                    shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
+                    if shared_letters / min(len(word), len(new_word)) > 0.7:  # Increased from 0.6 to 0.7
+                        too_similar = True
+                        break
+            if too_similar:
+                print(f"Attempt {attempt + 1}: Word too similar to previous words")
+                continue
             
-        # Check for similarity with previous words
-        for word in word_history:
-            # Check for shared letters (if same length)
-            if len(word) == len(new_word):
-                shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
-                if shared_letters / len(word) > 0.7:  # More than 70% shared letters
-                    return None, None
-            # Check for similar length words
-            elif abs(len(word) - len(new_word)) <= 2:
-                shared_letters = sum(1 for a, b in zip(word, new_word) if a == b)
-                if shared_letters / min(len(word), len(new_word)) > 0.6:  # More than 60% shared letters
-                    return None, None
-        
-        # Get the clue after confirming word uniqueness
-        clue_prompt = f"""Given the word chain:
-Previous word: {previous_word}
-New word: {new_word}
-
-Generate a {clue_style} clue that helps the player guess the word '{new_word}'.
-The clue should be clear but not too obvious.
-Return ONLY the clue, nothing else."""
-
-        clue_response = model.generate_content(clue_prompt)
-        clue = clue_response.text.strip()
-        
-        return new_word, clue
-        
-    except Exception as e:
-        print(f"Error in get_ai_word_and_clue: {str(e)}")
-        return None, None
+            # Get the clue using get_contextual_clue with difficulty settings
+            clue = get_contextual_clue(new_word, model, difficulty_settings)
+            if not clue:
+                print(f"Attempt {attempt + 1}: Failed to generate clue")
+                continue
+                
+            return new_word, clue
+            
+        except Exception as e:
+            print(f"Attempt {attempt + 1}: Error - {str(e)}")
+            continue
+    
+    print("All attempts failed to generate a valid word and clue")
+    return None, None
 
 def check_word_guess(guess, correct_word):
     """Checks if the player's guess matches the correct word."""
     return guess.strip().lower() == correct_word.lower()
-
-def get_letter_hints(word, min_letters, max_letters):
-    """Generates letter hints for the word."""
-    import random
-    word_length = len(word)
-    # Determine how many letters to show
-    num_letters = random.randint(min_letters, min(max_letters, word_length))
-    
-    # Create a list of positions to show
-    positions = random.sample(range(word_length), num_letters)
-    
-    # Create the hint string with underscores for hidden letters
-    hint = list('_' * word_length)
-    for pos in positions:
-        hint[pos] = word[pos]
-    
-    return ''.join(hint)
 
 def get_starting_word():
     """Gets a random starting word for the game."""
@@ -390,9 +367,51 @@ def get_starting_word():
                 "cake", "soup", "pie", "tea", "wine", "beer", "juice", "salt", "sugar", "honey"]
     }
     
-    # Select a random theme and then a random word from that theme
-    theme = random.choice(list(starting_words.keys()))
-    return random.choice(starting_words[theme])
+    try:
+        # Select a random theme and then a random word from that theme
+        theme = random.choice(list(starting_words.keys()))
+        word = random.choice(starting_words[theme])
+        
+        # Validate the word
+        if not word or not word.isalpha():
+            raise ValueError("Invalid word generated")
+            
+        return word.lower()
+        
+    except Exception as e:
+        print(f"Error in get_starting_word: {str(e)}")
+        # Fallback to a simple list of reliable starting words
+        fallback_words = ["sun", "moon", "star", "wind", "rain", "tree", "leaf", "wave", "sand", "snow"]
+        return random.choice(fallback_words)
+
+def validate_word(word, previous_word, word_history, min_letters, max_letters):
+    """Validate a word based on game rules."""
+    # Basic validation
+    if not word or not word.isalpha():
+        return False
+        
+    # Check length
+    if len(word) < min_letters or len(word) > max_letters:
+        return False
+        
+    # Check if word is already used
+    if word in word_history or word == previous_word:
+        return False
+        
+    # Check for anagrams
+    if sorted(word) == sorted(previous_word):
+        return False
+        
+    # Check for similarity with previous word
+    shared_letters = sum(1 for a, b in zip(word, previous_word) if a == b)
+    max_shared = max(len(word), len(previous_word))
+    similarity_ratio = shared_letters / max_shared
+    
+    # More lenient similarity check
+    if similarity_ratio > 0.8:  # Allow up to 80% similarity
+        return False
+        
+    return True
 
 # --- Main Game Logic ---
 
@@ -428,7 +447,7 @@ def play_game():
     # --- Initial Word ---
     print("\nGetting the first word from the AI...")
     previous_word = get_starting_word()
-    word_to_guess, current_clue = get_ai_word_and_clue(previous_word, difficulty_modifier, clue_style, [], min_letters, max_letters, word_relation)
+    word_to_guess, current_clue = get_ai_word_and_clue(previous_word, difficulty_modifier, clue_style, word_history, min_letters, max_letters, word_relation)
 
     if not word_to_guess or not current_clue:
         print("Failed to get starting word from AI. Exiting.")

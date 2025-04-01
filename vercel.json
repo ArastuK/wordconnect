@@ -3,33 +3,13 @@
     "builds": [
         {
             "src": "app.py",
-            "use": "@vercel/python@3.12"
+            "use": "@vercel/python"
         }
     ],
     "routes": [
         {
-            "src": "/static/(.*)",
-            "dest": "/static/$1",
-            "headers": {
-                "cache-control": "public, max-age=31536000, immutable"
-            }
-        },
-        {
             "src": "/(.*)",
-            "dest": "app.py",
-            "headers": {
-                "cache-control": "no-cache"
-            }
+            "dest": "app.py"
         }
-    ],
-    "functions": {
-        "app.py": {
-            "memory": 1024,
-            "maxDuration": 10
-        }
-    },
-    "env": {
-        "PYTHONPATH": ".",
-        "FLASK_ENV": "production"
-    }
+    ]
 } 

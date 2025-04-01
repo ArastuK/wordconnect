@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import os
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +12,16 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
-# MongoDB connection
+# MongoDB connection with connection pooling and timeouts
 MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
-client = MongoClient(MONGODB_URI)
+client = MongoClient(
+    MONGODB_URI,
+    server_api=ServerApi('1'),
+    connectTimeoutMS=5000,  # 5 seconds
+    socketTimeoutMS=5000,   # 5 seconds
+    maxPoolSize=50,
+    minPoolSize=10
+)
 db = client.wordconnect
 high_scores = db.high_scores
 

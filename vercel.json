@@ -8,10 +8,26 @@
     ],
     "routes": [
         {
+            "src": "/static/(.*)",
+            "dest": "/static/$1",
+            "headers": {
+                "cache-control": "public, max-age=31536000, immutable"
+            }
+        },
+        {
             "src": "/(.*)",
-            "dest": "app.py"
+            "dest": "app.py",
+            "headers": {
+                "cache-control": "no-cache"
+            }
         }
     ],
+    "functions": {
+        "app.py": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    },
     "env": {
         "PYTHONPATH": ".",
         "FLASK_ENV": "production"

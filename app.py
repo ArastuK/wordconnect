@@ -7,22 +7,25 @@ import uuid
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Use environment variable for secret key
 
 def init_db():
-    conn = sqlite3.connect('game.db')
-    c = conn.cursor()
-    
-    # Create high scores table
-    c.execute('''CREATE TABLE IF NOT EXISTS high_scores
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  player_name TEXT NOT NULL,
-                  score INTEGER NOT NULL,
-                  difficulty TEXT NOT NULL,
-                  date TEXT NOT NULL)''')
-    
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('game.db')
+        c = conn.cursor()
+        
+        # Create high scores table
+        c.execute('''CREATE TABLE IF NOT EXISTS high_scores
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      player_name TEXT NOT NULL,
+                      score INTEGER NOT NULL,
+                      difficulty TEXT NOT NULL,
+                      date TEXT NOT NULL)''')
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
 
 def save_high_score(player_name, score, difficulty):
     conn = sqlite3.connect('game.db')
@@ -190,6 +193,12 @@ def check_guess():
         return jsonify({
             'error': "An error occurred while processing your guess."
         })
+
+# Initialize database on startup
+init_db()
+
+# For Vercel deployment
+app = app
 
 if __name__ == '__main__':
     init_db()
